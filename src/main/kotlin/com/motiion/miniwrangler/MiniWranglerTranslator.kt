@@ -1,5 +1,8 @@
 package com.motiion.miniwrangler
 
-class MiniWranglerTranslator {
+import org.springframework.stereotype.Component
 
+@Component
+class MiniWranglerTranslator : Translator {
+    override fun translate(fileContents: String): String = ""
 }

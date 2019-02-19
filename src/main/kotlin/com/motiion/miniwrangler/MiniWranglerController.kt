@@ -1,10 +1,15 @@
 package com.motiion.miniwrangler
 
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class MiniWranglerController {
-    fun importOrders(sampleOrders: String) {
-        println(sampleOrders)
+class MiniWranglerController(val translator: Translator,
+                             val orderRepository: OrderRepository) {
+
+    @PostMapping("/api/import-orders-csv")
+    fun importOrders(@RequestBody ordersCsv: String) {
+        translator.translate(ordersCsv)
     }
 }
