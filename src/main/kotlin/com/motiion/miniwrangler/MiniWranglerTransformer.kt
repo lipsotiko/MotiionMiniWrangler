@@ -8,52 +8,57 @@ class MiniWranglerTransformer(val dslConfig: DslConfig) : Transformer {
 
   private val log = LoggerFactory.getLogger(MiniWranglerTransformer::class.java)
 
-  override fun process(fileContents: String): Map<String, String> {
+  override fun process(fileContents: String): List<String> {
     val allRows = fileContents.split("\\n")
-    val columnHeaders = allRows[0].split(",")
 
-    val transformedRows: MutableMap<String, String> = mutableMapOf()
-    for (fieldParam in dslConfig.fieldParameters) {
-      val fieldIndex = columnHeaders.indexOf(fieldParam.initialField)
-      var rowIndex = 1
-      while (rowIndex < allRows.size) {
-        val row = removeCommasFromQuotedValues(allRows[rowIndex])
-        val rowValues = row.split(",")
+    val transformedData: MutableList<String> = mutableListOf()
+
+    val transformedRow: MutableMap<String, String> = mutableMapOf()
+    var rowIndex = 1
+    while (rowIndex < allRows.size) {
+      val row = removeCommasFromQuotedValues(allRows[rowIndex])
+      val rowValues = row.split(",")
+
+      var fieldIndex = 0
+      while (fieldIndex < dslConfig.fieldParameters.size) {
+        val initialField = dslConfig.fieldParameters[fieldIndex].initialField
+        val destinationField = dslConfig.fieldParameters[fieldIndex].destinationField
+        val fieldType = dslConfig.fieldParameters[fieldIndex].fieldType
 
         try {
-          if (fieldParam.fieldType == "INTEGER") rowValues[fieldIndex].toInt()
-          if (fieldParam.fieldType == "BIGDECIMAL") rowValues[fieldIndex].toBigDecimal()
+          if (fieldType == "INTEGER") rowValues[fieldIndex].toInt()
+          if (fieldType == "BIGDECIMAL") rowValues[fieldIndex].toBigDecimal()
         } catch (nfe: NumberFormatException) {
-          log.error("Error: Failed to translate row $rowIndex ${fieldParam.initialField} to ${fieldParam.destinationField} as a ${fieldParam.fieldType}")
-          rowIndex++
+          log.error("Error: Failed to translate row $rowIndex $initialField to $destinationField as a $fieldType")
+          break
+        }
+
+        if (initialField.startsWith("default=")) {
+          transformedRow[destinationField] = initialField.replace("default=", "")
+          fieldIndex++
           continue
         }
 
-        if (fieldParam.initialField.contains("$")) {
-          var derivedValue = fieldParam.initialField;
-
+        if (initialField.contains("$")) {
+          var derivedValue = initialField
+          val columnHeaders = allRows[0].split(",")
           columnHeaders.forEach { header ->
             derivedValue = derivedValue.replace("\${$header}", rowValues[columnHeaders.indexOf(header)])
           }
-          transformedRows[fieldParam.destinationField] = derivedValue
-          rowIndex++
+          transformedRow[destinationField] = derivedValue
+          fieldIndex++
           continue
         }
 
-        if (fieldParam.initialField.startsWith("default=")) {
-          transformedRows[fieldParam.destinationField] = fieldParam.initialField.replace("default=", "")
-          rowIndex++
-          continue
-        }
-
-        transformedRows[fieldParam.destinationField] = rowValues[fieldIndex]
-        rowIndex++
+        transformedRow[destinationField] = rowValues[fieldIndex]
+        fieldIndex++
       }
+
+      if(transformedRow.isNotEmpty()) transformedData.add(transformedRow.toString())
+      rowIndex++
     }
 
-    println(transformedRows.toString())
-
-    return transformedRows
+    return transformedData
   }
 
   private fun removeCommasFromQuotedValues(rowValues: String): String {
@@ -63,7 +68,7 @@ class MiniWranglerTransformer(val dslConfig: DslConfig) : Transformer {
       val firstCommaIndex = formattedRow.indexOf("\"")
       val secondCommaIndex = formattedRow.indexOf("\"", firstCommaIndex + 1)
       val originalQuotedValue = formattedRow.substring(firstCommaIndex, secondCommaIndex + 1)
-      val formattedValue = originalQuotedValue.replace(",","").replace("\"","")
+      val formattedValue = originalQuotedValue.replace(",", "").replace("\"", "")
       formattedRow = formattedRow.replace(originalQuotedValue, formattedValue)
     }
     return formattedRow

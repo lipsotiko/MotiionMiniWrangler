@@ -85,6 +85,8 @@ extracted into a separate module
 - End-of-line characters is always \n
 - Adding a new derived column such as the "kg" string for the Unit field will only work if there are exiting 
 records in the csv file
+- Quoted values are assumed to be quoted because they contain a comma; and since a comma is used as a delimiter
+the quoted values will be formatted by removing commas within the quotes, then removing the quotes
 
 #Resources
 - https://www.martinfowler.com/articles/codeGenDsl.html
