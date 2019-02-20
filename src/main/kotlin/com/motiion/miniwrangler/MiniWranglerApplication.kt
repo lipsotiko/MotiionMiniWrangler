@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class MiniWranglerApplication
 
 fun main(args: Array<String>) {
-    runApplication<MiniWranglerApplication>(*args)
+  runApplication<MiniWranglerApplication>(*args)
 }

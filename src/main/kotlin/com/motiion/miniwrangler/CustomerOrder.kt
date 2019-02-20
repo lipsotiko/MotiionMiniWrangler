@@ -7,5 +7,5 @@ import javax.persistence.*
 data class CustomerOrder(@Id
                          @GeneratedValue(strategy = GenerationType.IDENTITY)
                          val id: Long,
-                         val orderId: Long,
-                         val orderDate: LocalDate)
+                         val OrderID: Long,
+                         val OrderDate: LocalDate)

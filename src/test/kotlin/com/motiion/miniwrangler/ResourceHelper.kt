@@ -6,5 +6,5 @@ import org.apache.commons.io.FileUtils
 
 @Throws(IOException::class)
 fun getSampleDataFromResource(path: String, file: String): String =
-        FileUtils.readFileToString(ClassPathResource("$path/$file").file, "UTF-8")
+  FileUtils.readFileToString(ClassPathResource("$path/$file").file, "UTF-8")
 

@@ -1,0 +1,35 @@
+spring:
+  jpa:
+    show-sql: true
+    format_sql: true
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: create
+  datasource:
+    url: jdbc:h2:mem:motiion
+    username: SA
+    password:
+    driver-class-name: org.h2.Driver
+motiion:
+  domain-specific-language:
+    field-config-parameters:
+      - initial-field: Order Number
+        field-position: 1
+        field-type: INTEGER
+        destination-field: OrderID
+      - initial-field: ${Year}-${Month}-${Day}
+        field-type: DATE
+        destination-field: OrderDate
+      - initial-field: Product Number
+        field-type: STRING
+        destination-field: ProductId
+      - initial-field: Product Name
+        field-type: STRING
+        destination-field: ProductName
+      - initial-field: Count
+        field-type: BIGDECIMAL
+        destination-field: Quantity
+      - initial-field: default=kg
+        field-type: STRING
+        destination-field: Unit

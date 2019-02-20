@@ -80,6 +80,11 @@ Dropbox, Google Drive or any other file sharing service you prefer
 - Although the MiniWranglerTranslator is not pulled into a library on it's own; that class implements 
 the Translator interface which provides a seam within the application to allow the implementation to be 
 extracted into a separate module
+- The first row of the csv file will always have column headers
+- Row delimiters are always commas
+- End-of-line characters is always \n
+- Adding a new derived column such as the "kg" string for the Unit field will only work if there are exiting 
+records in the csv file
 
 #Resources
 - https://www.martinfowler.com/articles/codeGenDsl.html
