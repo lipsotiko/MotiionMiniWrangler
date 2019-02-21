@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class MiniWranglerController(val transformer: Transformer,
-                             val orderRepository: OrderRepository,
+                             val customerOrderRepository: CustomerOrderRepository,
                              val objectMapper: ObjectMapper) {
-
   @PostMapping("/api/import-orders-csv")
-  fun importOrders(@RequestBody ordersCsv: String) {
-      transformer.processCsv(ordersCsv).forEach { record ->
-      orderRepository.save(objectMapper.convertValue(record, CustomerOrder::class.java))
+
+  fun importOrdersCsv(@RequestBody ordersCsv: String) {
+    transformer.processCsv(ordersCsv).forEach { record ->
+      customerOrderRepository.save(objectMapper.readValue(record, CustomerOrder::class.java))
     }
   }
 }

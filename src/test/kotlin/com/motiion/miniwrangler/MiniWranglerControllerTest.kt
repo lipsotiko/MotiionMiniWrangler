@@ -11,13 +11,13 @@ import org.mockito.Mockito.verify
 class MiniWranglerControllerTest {
 
   private val transformer: Transformer = mock()
-  private val ordersRepository: OrderRepository = mock()
+  private val ordersRepositoryCustomer: CustomerOrderRepository = mock()
   private val objectMapper: ObjectMapper = mock()
 
   private lateinit var miniWranglerController: MiniWranglerController
 
-  private val customerOrder1 = CustomerOrder(1, 1L)
-  private val customerOrder2 = CustomerOrder(2, 2L)
+  private val customerOrder1: CustomerOrder = mock()
+  private val customerOrder2: CustomerOrder = mock()
 
   @Before
   fun set_up() {
@@ -27,8 +27,8 @@ class MiniWranglerControllerTest {
       .thenReturn(customerOrder1)
     whenever(objectMapper.readValue("translated record 2", CustomerOrder::class.java))
       .thenReturn(customerOrder2)
-    miniWranglerController = MiniWranglerController(transformer, ordersRepository, objectMapper)
-    miniWranglerController.importOrders("orders csv")
+    miniWranglerController = MiniWranglerController(transformer, ordersRepositoryCustomer, objectMapper)
+    miniWranglerController.importOrdersCsv("orders csv")
   }
 
   @Test
@@ -38,7 +38,8 @@ class MiniWranglerControllerTest {
 
   @Test
   fun translated_orders_are_persisted_to_the_orders_repository() {
-    verify(ordersRepository, times(1)).save(customerOrder1)
-    verify(ordersRepository, times(1)).save(customerOrder2)
+    verify(ordersRepositoryCustomer, times(1)).save(customerOrder1)
+    verify(ordersRepositoryCustomer, times(1)).save(customerOrder2)
   }
+
 }

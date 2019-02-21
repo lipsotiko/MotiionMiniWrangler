@@ -8,12 +8,12 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 
 @Entity
-data class CustomerOrder(@Id
-                         @GeneratedValue(strategy = GenerationType.IDENTITY)
-                         val id: Long = 0,
-                         val OrderID: Long = 0,
-                         val OrderDate: LocalDate = LocalDate.MIN,
-                         val ProductId: String = "",
-                         val ProductName: String = "",
-                         val Quantity: BigDecimal = BigDecimal.ZERO,
-                         val Unit: String = "")
+class CustomerOrder(@Id
+                    @GeneratedValue(strategy = GenerationType.IDENTITY)
+                    var id: Long,
+                    var orderId: Long,
+                    var orderDate: LocalDate,
+                    var productId: String,
+                    var productName: String,
+                    var quantity: BigDecimal,
+                    var unit: String)

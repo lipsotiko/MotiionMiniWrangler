@@ -16,19 +16,19 @@ motiion:
     field-config-parameters:
       - initial-field: Order Number
         field-type: INTEGER
-        destination-field: OrderID
+        destination-field: orderId
       - initial-field: ${Year}-${Month}-${Day}
         field-type: DATE
-        destination-field: OrderDate
+        destination-field: orderDate
       - initial-field: Product Number
         field-type: STRING
-        destination-field: ProductId
+        destination-field: productId
       - initial-field: Product Name
         field-type: STRING
-        destination-field: ProductName
+        destination-field: productName
       - initial-field: Count
         field-type: BIGDECIMAL
-        destination-field: Quantity
+        destination-field: quantity
       - initial-field: default=kg
         field-type: STRING
-        destination-field: Unit
+        destination-field: unit

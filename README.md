@@ -91,8 +91,12 @@ the quoted values will be formatted by removing commas within the quotes, then r
 #Next Steps
 - See if the DSL can be standardized across multiple customers so that a high level of configurability is not needed
 - Investigate the potential throughput needed for this API to be efficient in a production environment and test it 
-- If customers are generating files from different systems; we may need to make the end-of-line character configurable 
+- If customers are generating files from various system types; we may need to make the end-of-line character configurable 
 to accept newline characters from other file types.
+- If multiple customers data needs to be stored in the same system, find a way to segregate the data
+- When an error occurs with the translation of an import, find a way for the data to be corrected or re-imported
+- Create a production configuration that will allow the application to connect to a real database
 
 #Resources
 - https://www.martinfowler.com/articles/codeGenDsl.html
+- https://github.com/s1monw1/hibernateOnKotlin/tree/master/src/main/kotlin/com/kotlinexpertise/hibernatedemo

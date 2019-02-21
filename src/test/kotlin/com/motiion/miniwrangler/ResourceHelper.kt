@@ -1,8 +1,8 @@
 package com.motiion.miniwrangler
 
+import org.apache.commons.io.FileUtils
 import org.springframework.core.io.ClassPathResource
 import java.io.IOException
-import org.apache.commons.io.FileUtils
 
 @Throws(IOException::class)
 fun getSampleDataFromResource(path: String, file: String): String =
