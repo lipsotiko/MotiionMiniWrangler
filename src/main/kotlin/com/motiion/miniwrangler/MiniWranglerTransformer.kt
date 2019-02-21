@@ -8,8 +8,8 @@ class MiniWranglerTransformer(val dslConfig: DslConfig) : Transformer {
 
   private val log = LoggerFactory.getLogger(MiniWranglerTransformer::class.java)
 
-  override fun process(fileContents: String): List<String> {
-    val allRows = fileContents.split("\\n")
+  override fun processCsv(fileContents: String): List<String> {
+    val allRows = fileContents.split("\n")
 
     val transformedData: MutableList<String> = mutableListOf()
 
@@ -20,10 +20,11 @@ class MiniWranglerTransformer(val dslConfig: DslConfig) : Transformer {
       val rowValues = row.split(",")
 
       var fieldIndex = 0
-      while (fieldIndex < dslConfig.fieldParameters.size) {
-        val initialField = dslConfig.fieldParameters[fieldIndex].initialField
-        val destinationField = dslConfig.fieldParameters[fieldIndex].destinationField
-        val fieldType = dslConfig.fieldParameters[fieldIndex].fieldType
+
+      while (fieldIndex < dslConfig.fieldConfigParameters.size) {
+        val initialField = dslConfig.fieldConfigParameters[fieldIndex].initialField
+        val destinationField = dslConfig.fieldConfigParameters[fieldIndex].destinationField
+        val fieldType = dslConfig.fieldConfigParameters[fieldIndex].fieldType
 
         try {
           if (fieldType == "INTEGER") rowValues[fieldIndex].toInt()

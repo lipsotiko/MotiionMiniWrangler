@@ -15,7 +15,6 @@ motiion:
   domain-specific-language:
     field-config-parameters:
       - initial-field: Order Number
-        field-position: 1
         field-type: INTEGER
         destination-field: OrderID
       - initial-field: ${Year}-${Month}-${Day}

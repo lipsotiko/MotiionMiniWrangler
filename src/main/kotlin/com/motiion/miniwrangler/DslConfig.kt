@@ -6,9 +6,9 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "motiion.domain-specific-language")
 class DslConfig {
-  var fieldParameters: MutableList<FieldParameter> = mutableListOf()
+  var fieldConfigParameters: MutableList<FieldConfigParameter> = mutableListOf()
 }
 
-class FieldParameter(var initialField: String = "",
-                     var fieldType: String,
-                     var destinationField: String)
+class FieldConfigParameter(var initialField: String = "",
+                           var fieldType: String = "",
+                           var destinationField: String = "")
