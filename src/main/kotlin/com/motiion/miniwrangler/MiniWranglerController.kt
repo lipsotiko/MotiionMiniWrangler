@@ -11,9 +11,11 @@ class MiniWranglerController(val transformer: Transformer,
                              val customerOrderRepository: CustomerOrderRepository,
                              val objectMapper: ObjectMapper) {
   @PostMapping("/api/import-orders-csv")
-  fun importOrdersCsv(@RequestBody ordersCsv: String) {
+  fun importOrdersCsv(@RequestBody ordersCsv: String): String {
     transformer.transform(ordersCsv).forEach { record ->
       customerOrderRepository.save(objectMapper.readValue(record, CustomerOrder::class.java))
     }
+
+    return "${customerOrderRepository.count()} records exist in the Customer Orders table"
   }
 }

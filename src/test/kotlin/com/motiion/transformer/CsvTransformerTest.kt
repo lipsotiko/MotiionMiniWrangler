@@ -45,7 +45,7 @@ class CsvTransformerTest {
   }
 
   @Test
-  fun derived_column_is_added_with_default_value_during_transformation() {
+  fun default_column_and_value_is_added_during_transformation() {
     val sampleCsv = "To Be\n or not to be"
     setFieldParams(FieldConfigParameter("default=MrWhite", "STRING", "DerivedCol"))
     val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
@@ -53,7 +53,7 @@ class CsvTransformerTest {
   }
 
   @Test
-  fun date_transformation_by_merging_columns_with_an_expression() {
+  fun derived_column_as_date_transformation_utilizing_an_expression() {
     val sampleCsv = "Year,Month,Day\n2018,4,28"
     setFieldParams(FieldConfigParameter("\${Year}-\${Month}-\${Day}", "DATE", "DateCol"))
     val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
