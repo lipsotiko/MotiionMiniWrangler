@@ -1,6 +1,7 @@
 package com.motiion.miniwrangler
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.motiion.transformer.Transformer
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import org.junit.Before
@@ -21,7 +22,7 @@ class MiniWranglerControllerTest {
 
   @Before
   fun set_up() {
-    whenever(transformer.processCsv("orders csv"))
+    whenever(transformer.transform("orders csv"))
       .thenReturn(listOf("translated record 1", "translated record 2"))
     whenever(objectMapper.readValue("translated record 1", CustomerOrder::class.java))
       .thenReturn(customerOrder1)
@@ -33,7 +34,7 @@ class MiniWranglerControllerTest {
 
   @Test
   fun orders_are_process_by_the_translator() {
-    verify(transformer).processCsv("orders csv")
+    verify(transformer).transform("orders csv")
   }
 
   @Test
@@ -41,5 +42,4 @@ class MiniWranglerControllerTest {
     verify(ordersRepositoryCustomer, times(1)).save(customerOrder1)
     verify(ordersRepositoryCustomer, times(1)).save(customerOrder2)
   }
-
 }

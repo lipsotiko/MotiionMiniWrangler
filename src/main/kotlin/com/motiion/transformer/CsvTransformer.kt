@@ -1,40 +1,38 @@
-package com.motiion.miniwrangler
+package com.motiion.transformer
 
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
-const val COLUMN_DELIMITER = ","
-const val ROW_DELIMITER = "\n"
+class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigParameter>,
+                     private val columnDelimiter: String = ",",
+                     private val rowDelimiter: String = "\n") : Transformer {
 
-@Component
-class MiniWranglerTransformer(val domainSpecificLanguagelConfig: DomainSpecificLanguagelConfig) : Transformer {
+  private val log = LoggerFactory.getLogger(CsvTransformer::class.java)
 
-  private val log = LoggerFactory.getLogger(MiniWranglerTransformer::class.java)
-
-  override fun processCsv(fileContents: String): List<String> {
-    val allRows = fileContents.split(ROW_DELIMITER)
-    val columnHeaders = allRows[0].split(COLUMN_DELIMITER)
+  override fun transform(fileContents: String): List<String> {
+    val allRows = fileContents.split(rowDelimiter)
+    val columnHeaders = allRows[0].split(columnDelimiter)
     val transformedData: MutableList<String> = mutableListOf()
     val transformedRow: MutableMap<String, String> = mutableMapOf()
     var rowIndex = 1
 
     while (rowIndex < allRows.size) {
       val row = removeCommasFromQuotedValues(allRows[rowIndex])
-      val rowValues = row.split(COLUMN_DELIMITER)
+      val rowValues = row.split(columnDelimiter)
       var fieldConfigIndex = 0
       var finalFieldValue: String
 
-      while (fieldConfigIndex < domainSpecificLanguagelConfig.fieldConfigParameters.size) {
-        val initialField = domainSpecificLanguagelConfig.fieldConfigParameters[fieldConfigIndex].initialField
-        val destinationField = domainSpecificLanguagelConfig.fieldConfigParameters[fieldConfigIndex].destinationField
-        val fieldType = domainSpecificLanguagelConfig.fieldConfigParameters[fieldConfigIndex].fieldType
+      while (fieldConfigIndex < fieldConfigParameters.size) {
+        val initialField = fieldConfigParameters[fieldConfigIndex].initialField
+        val destinationField = fieldConfigParameters[fieldConfigIndex].destinationField
+        val fieldType = fieldConfigParameters[fieldConfigIndex].fieldType
         val columnIndex = columnHeaders.indexOf(initialField)
 
         when {
           initialField.startsWith("default=") -> finalFieldValue = initialField.replace("default=", "")
           initialField.contains("$") -> {
             var derivedValue = initialField
-
             columnHeaders.forEach { header ->
               derivedValue = derivedValue.replace("\${$header}", rowValues[columnHeaders.indexOf(header)])
             }
@@ -45,13 +43,7 @@ class MiniWranglerTransformer(val domainSpecificLanguagelConfig: DomainSpecificL
 
         if (fieldType == "DATE") finalFieldValue = zeroPadMonthAndDay(finalFieldValue)
 
-        try {
-          if (fieldType == "INTEGER") rowValues[columnIndex].toInt()
-          if (fieldType == "BIGDECIMAL") rowValues[columnIndex].toBigDecimal()
-        } catch (nfe: NumberFormatException) {
-          log.error("Error: Failed to translate row $rowIndex $initialField to $destinationField as a $fieldType")
-          break
-        }
+        if (validateFieldTypes(fieldType, finalFieldValue, rowIndex, initialField, destinationField)) break
 
         transformedRow[destinationField] = finalFieldValue
         fieldConfigIndex++
@@ -65,19 +57,29 @@ class MiniWranglerTransformer(val domainSpecificLanguagelConfig: DomainSpecificL
     return transformedData
   }
 
+  private fun validateFieldTypes(fieldType: String, finalFieldValue: String, rowIndex: Int, initialField: String, destinationField: String): Boolean {
+    try {
+      if (fieldType == "INTEGER") finalFieldValue.toInt()
+      if (fieldType == "BIGDECIMAL") finalFieldValue.toBigDecimal()
+      if (fieldType == "DATE") LocalDate.parse(finalFieldValue)
+    } catch (nfe: NumberFormatException) {
+      logError(rowIndex, initialField, destinationField, fieldType)
+      return true
+    } catch (e: DateTimeParseException) {
+      logError(rowIndex, initialField, destinationField, fieldType)
+      return true
+    }
+    return false
+  }
+
   private fun zeroPadMonthAndDay(unformattedDate: String): String {
     val splitDate = unformattedDate.split("-")
     val year = splitDate[0]
     var month = splitDate[1]
     var day = splitDate[2]
 
-    if (month.length == 1) {
-      month = "0$month"
-    }
-
-    if (day.length == 1) {
-      day = "0$day"
-    }
+    if (month.length == 1) month = "0$month"
+    if (day.length == 1) day = "0$day"
 
     return "$year-$month-$day"
   }
@@ -85,7 +87,7 @@ class MiniWranglerTransformer(val domainSpecificLanguagelConfig: DomainSpecificL
   private fun jsonify(row: MutableMap<String, String>): String {
     val jsonifiedMap: MutableMap<String, String> = mutableMapOf()
 
-    domainSpecificLanguagelConfig.fieldConfigParameters.forEach { field ->
+    fieldConfigParameters.forEach { field ->
       val targetKey = "\"" + field.destinationField + "\""
       var targetVal = row[field.destinationField]
 
@@ -112,5 +114,9 @@ class MiniWranglerTransformer(val domainSpecificLanguagelConfig: DomainSpecificL
       formattedRow = formattedRow.replace(originalQuotedValue, formattedValue)
     }
     return formattedRow
+  }
+
+  private fun logError(rowIndex: Int, initialField: String, destinationField: String, fieldType: String) {
+    log.error("Error: Failed to translate row $rowIndex $initialField to $destinationField as a $fieldType")
   }
 }

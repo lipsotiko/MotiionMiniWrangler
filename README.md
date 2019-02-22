@@ -77,14 +77,9 @@ Dropbox, Google Drive or any other file sharing service you prefer
 - Customers will POST over an HTTP request a reasonable about of data that won't cause the system to crash
 - The CSV file will be posted as a single string in the body of the HTTP request
 - An in memory database is used for automated tests, and for running the application locally
-- Although the MiniWranglerTranslator is not pulled into a library on it's own; that class implements 
-the Translator interface which provides a seam within the application to allow the implementation to be 
-extracted into a separate module; however, it was written as a library with no reliance on external dependencies
 - The first row of the csv file will always have column headers
-- Row delimiters are always commas
-- End-of-line characters is always \n (unix newline character)
 - Adding a new derived column such as the "kg" string for the Unit field will only work if there are exiting 
-records in the csv file
+    records in the csv file
 - Quoted values are assumed to be quoted because they contain a comma; and since a comma is used as a delimiter
 the quoted values will be formatted by removing commas within the quotes, then removing the quotes
 

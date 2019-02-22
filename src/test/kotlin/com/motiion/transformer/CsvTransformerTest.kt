@@ -1,18 +1,18 @@
-package com.motiion.miniwrangler
+package com.motiion.transformer
 
+import com.motiion.miniwrangler.getSampleDataFromResource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
-class MiniWranglerTransformerTest {
+class CsvTransformerTest {
 
-  private val fieldConfig = DomainSpecificLanguagelConfig()
   private var fieldConfigParameters: MutableList<FieldConfigParameter> = mutableListOf()
 
   @Test
   fun string_transformation() {
     val sampleCsv = "Awesome Possum\ncool string"
     setFieldParams(FieldConfigParameter("Awesome Possum", "STRING", "CoolColumn"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"CoolColumn\":\"cool string\"}")
   }
 
@@ -20,7 +20,7 @@ class MiniWranglerTransformerTest {
   fun integer_transformation() {
     val sampleCsv = "Superman\n123123"
     setFieldParams(FieldConfigParameter("Superman", "INTEGER", "NumCol"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"NumCol\":123123}")
   }
 
@@ -28,7 +28,7 @@ class MiniWranglerTransformerTest {
   fun big_decimal_transformation() {
     val sampleCsv = "Maryland\n9999999.99\n\"5,250.50\""
     setFieldParams(FieldConfigParameter("Maryland", "BIGDECIMAL", "BigDecimalCol"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"BigDecimalCol\":9999999.99}")
     assertThat(transformedData[1]).isEqualTo("{\"BigDecimalCol\":5250.50}")
   }
@@ -39,7 +39,7 @@ class MiniWranglerTransformerTest {
     setFieldParams(
       FieldConfigParameter("Maryland", "BIGDECIMAL", "MdBigDecimalCol"),
       FieldConfigParameter("Ohio", "BIGDECIMAL", "OhBigDecimalCol"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"MdBigDecimalCol\":9999999.99, \"OhBigDecimalCol\":9999999.99}")
     assertThat(transformedData[1]).isEqualTo("{\"MdBigDecimalCol\":9999999.99, \"OhBigDecimalCol\":9999999.99}")
   }
@@ -48,7 +48,7 @@ class MiniWranglerTransformerTest {
   fun derived_column_is_added_with_default_value_during_transformation() {
     val sampleCsv = "To Be\n or not to be"
     setFieldParams(FieldConfigParameter("default=MrWhite", "STRING", "DerivedCol"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"DerivedCol\":\"MrWhite\"}")
   }
 
@@ -56,7 +56,7 @@ class MiniWranglerTransformerTest {
   fun date_transformation_by_merging_columns_with_an_expression() {
     val sampleCsv = "Year,Month,Day\n2018,4,28"
     setFieldParams(FieldConfigParameter("\${Year}-\${Month}-\${Day}", "DATE", "DateCol"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"DateCol\":\"2018-04-28\"}")
   }
 
@@ -64,14 +64,14 @@ class MiniWranglerTransformerTest {
   fun attempting_to_transform_a_non_big_decimal_value_will_skip_the_record() {
     val sampleCsv = "Maryland\n Not a Big Decimal\n Not a Big Decimal"
     setFieldParams(FieldConfigParameter("Maryland", "BIGDECIMAL", "BigDecimalCol"))
-    assertThat(MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv).size).isEqualTo(0)
+    assertThat(CsvTransformer(fieldConfigParameters).transform(sampleCsv).size).isEqualTo(0)
   }
 
   @Test
   fun attempting_to_transform_a_non_integer_value_will_skip_the_record() {
     val sampleCsv = "Superman\n Not an Integer"
     setFieldParams(FieldConfigParameter("Superman", "INTEGER", "NumCol"))
-    assertThat(MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv).size).isEqualTo(0)
+    assertThat(CsvTransformer(fieldConfigParameters).transform(sampleCsv).size).isEqualTo(0)
   }
 
   @Test
@@ -81,7 +81,7 @@ class MiniWranglerTransformerTest {
       FieldConfigParameter("Maryland", "BIGDECIMAL", "SomeBadData"),
       FieldConfigParameter("Ohio", "STRING", "GoodData"),
       FieldConfigParameter("Delaware", "STRING", "ReallyGoodData"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0])
       .isEqualTo("{\"SomeBadData\":9999999, \"GoodData\":\"Steve\", \"ReallyGoodData\":\"John\"}")
   }
@@ -96,14 +96,13 @@ class MiniWranglerTransformerTest {
       FieldConfigParameter("Product Name", "STRING", "productName"),
       FieldConfigParameter("Count", "BIGDECIMAL", "quantity"),
       FieldConfigParameter("default=kg", "STRING", "unit"))
-    val transformedData = MiniWranglerTransformer(fieldConfig).processCsv(sampleCsv)
+    val transformedData = CsvTransformer(fieldConfigParameters).transform(sampleCsv)
     assertThat(transformedData[0]).isEqualTo("{\"orderId\":1000, \"orderDate\":\"2018-01-01\", \"productId\":\"P-10001\", \"productName\":\"Arugola\", \"quantity\":5250.50, \"unit\":\"kg\"}")
     assertThat(transformedData[1]).isEqualTo("{\"orderId\":1001, \"orderDate\":\"2017-12-12\", \"productId\":\"P-10002\", \"productName\":\"Iceberg lettuce\", \"quantity\":500.00, \"unit\":\"kg\"}")
   }
 
   private fun setFieldParams(vararg newFieldConfigParams: FieldConfigParameter) {
     for (fieldParam in newFieldConfigParams) fieldConfigParameters.add(fieldParam)
-    fieldConfig.fieldConfigParameters = fieldConfigParameters
   }
 
 }
