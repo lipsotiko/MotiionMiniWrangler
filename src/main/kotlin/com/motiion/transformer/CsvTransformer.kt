@@ -73,6 +73,7 @@ class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigP
   }
 
   private fun zeroPadMonthAndDay(unformattedDate: String): String {
+    if (!unformattedDate.contains("-")) return unformattedDate
     val splitDate = unformattedDate.split("-")
     val year = splitDate[0]
     var month = splitDate[1]

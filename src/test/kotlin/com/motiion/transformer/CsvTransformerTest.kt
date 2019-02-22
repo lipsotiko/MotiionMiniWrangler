@@ -75,6 +75,13 @@ class CsvTransformerTest {
   }
 
   @Test
+  fun attempting_to_transform_a_non_date_value_will_skip_the_record() {
+    val sampleCsv = "Batman\n Not a Date"
+    setFieldParams(FieldConfigParameter("Batman", "DATE", "DateCol"))
+    assertThat(CsvTransformer(fieldConfigParameters).transform(sampleCsv).size).isEqualTo(0)
+  }
+
+  @Test
   fun records_with_errors_are_omitted_while_records_with_no_errors_are_returned() {
     val sampleCsv = "Maryland,Ohio,Delaware\n Not a Big Decimal,George,Anna\n9999999,Steve,John"
     setFieldParams(
