@@ -4,18 +4,22 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
+const val HEADER_INDEX = 0
+const val DATA_START_INDEX = 1
+
 class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigParameter>,
                      private val columnDelimiter: String = ",",
                      private val rowDelimiter: String = "\n") : Transformer {
 
   private val log = LoggerFactory.getLogger(CsvTransformer::class.java)
 
+  private val transformedData: MutableList<String> = mutableListOf()
+  private val transformedRow: MutableMap<String, String> = mutableMapOf()
+
   override fun transform(fileContents: String): List<String> {
     val allRows = fileContents.split(rowDelimiter)
-    val columnHeaders = allRows[0].split(columnDelimiter)
-    val transformedData: MutableList<String> = mutableListOf()
-    val transformedRow: MutableMap<String, String> = mutableMapOf()
-    var rowIndex = 1
+    val columnHeaders = allRows[HEADER_INDEX].split(columnDelimiter)
+    var rowIndex = DATA_START_INDEX
 
     while (rowIndex < allRows.size) {
       val row = removeCommasFromQuotedValues(allRows[rowIndex])
@@ -30,7 +34,8 @@ class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigP
         val columnIndex = columnHeaders.indexOf(initialField)
 
         when {
-          initialField.startsWith("default=") -> finalFieldValue = initialField.replace("default=", "")
+          initialField.startsWith("default=") ->
+            finalFieldValue = initialField.replace("default=", "")
           initialField.contains("$") -> {
             var derivedValue = initialField
             columnHeaders.forEach { header ->
@@ -43,7 +48,7 @@ class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigP
 
         if (fieldType == "DATE") finalFieldValue = zeroPadMonthAndDay(finalFieldValue)
 
-        if (validateFieldTypes(fieldType, finalFieldValue, rowIndex, initialField, destinationField)) break
+        if (invalidFieldType(fieldType, finalFieldValue, rowIndex, initialField, destinationField)) break
 
         transformedRow[destinationField] = finalFieldValue
         fieldConfigIndex++
@@ -57,7 +62,7 @@ class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigP
     return transformedData
   }
 
-  private fun validateFieldTypes(fieldType: String, finalFieldValue: String, rowIndex: Int, initialField: String, destinationField: String): Boolean {
+  private fun invalidFieldType(fieldType: String, finalFieldValue: String, rowIndex: Int, initialField: String, destinationField: String): Boolean {
     try {
       if (fieldType == "INTEGER") finalFieldValue.toInt()
       if (fieldType == "BIGDECIMAL") finalFieldValue.toBigDecimal()
@@ -85,20 +90,18 @@ class CsvTransformer(private val fieldConfigParameters: MutableList<FieldConfigP
     return "$year-$month-$day"
   }
 
-  private fun jsonify(row: MutableMap<String, String>): String {
+  private fun jsonify(rowValues: MutableMap<String, String>): String {
     val jsonifiedMap: MutableMap<String, String> = mutableMapOf()
 
     fieldConfigParameters.forEach { field ->
       val targetKey = "\"" + field.destinationField + "\""
-      var targetVal = row[field.destinationField]
+      var targetVal = rowValues[field.destinationField]
 
       if (field.fieldType == "STRING" || field.fieldType == "DATE") {
-        targetVal = "\"" + row[field.destinationField] + "\""
+        targetVal = "\"" + rowValues[field.destinationField] + "\""
       }
 
-      if (targetVal != null) {
-        jsonifiedMap[targetKey] = targetVal
-      }
+      if (targetVal != null) jsonifiedMap[targetKey] = targetVal
     }
 
     return jsonifiedMap.toString().replace("=", ":")
